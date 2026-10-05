@@ -3,6 +3,7 @@
 
 import { generateSalt, sha256Hex, timingSafeEqual, hashRecordingPassword } from "./crypto.js";
 import { errorResponse, jsonResponse, parseCookies } from "./http.js";
+import { limitedJson } from "./hostedUploads.js";
 
 export async function isAuthorized(request, env) {
 	const auth = request.headers.get("Authorization");
@@ -179,7 +180,7 @@ export async function handleVerifyPassword(request, env, shareCode) {
 	if (recent && recent.cnt >= 10)
 		return errorResponse("Too many attempts — try again later", 429);
 
-	const body = await request.json();
+	const body = await limitedJson(request, 16384);
 	const password = body.password || "";
 
 	const clientHash = await sha256Hex(password);
